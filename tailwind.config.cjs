@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const withMT = require("@material-tailwind/react/utils/withMT");
+
 /** @type {import('tailwindcss').Config} */
 const config = {
   content: ["./src/**/*.{js,ts,jsx,tsx}"],
@@ -10,4 +13,4 @@ const config = {
   },
 };
 
-module.exports = config;
+module.exports = withMT({...config});

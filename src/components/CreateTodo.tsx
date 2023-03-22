@@ -1,4 +1,6 @@
+
 import { api } from "@/utils/api"
+import { Button, Input } from "@material-tailwind/react";
 import { useState } from "react"
 
 const CreateTodo = () => {
@@ -7,12 +9,35 @@ const CreateTodo = () => {
     completed: false,
   })
 
-  const { refetch } = api.todo.getAllTodos.useQuery()
+  const utils = api.useContext();
 
-  const { mutate, isLoading } = api.todo.createTodo.useMutation({
-    onSuccess: async () => {
-      await refetch();
-    }
+  const { mutate } = api.todo.createTodo.useMutation({
+    onMutate: async (input) => {
+      await utils.todo.getAllTodos.cancel()
+      const previousTodos = utils.todo.getAllTodos.getData()
+
+      utils.todo.getAllTodos.setData(undefined, (prev) => {
+        if (!prev) return previousTodos
+        const optimisticNewTodo = {
+          ...input,
+          userId: "t",
+          completed: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          id: "optimistic-id"
+        }
+        return [...prev, optimisticNewTodo]
+      })
+
+      return { previousTodos }
+    },
+    onError: (_, __, context) => {
+      if (!context) return
+      utils.todo.getAllTodos.setData(undefined, () => context.previousTodos)
+    },
+    onSettled: () => {
+      void utils.todo.getAllTodos.invalidate()
+    },
   })
 
   const onSubmit = () => {
@@ -23,29 +48,29 @@ const CreateTodo = () => {
 
   return (
     <div>
-      <div className="card bg-base-100 shadow-xl max-w-[900px] mx-auto">
+      <div className="bg-base-100 mx-auto">
         <div className="card-body">
           <div className="flex flex-col gap-3">
-            <input type="text"
-              className="input input-bordered w-full bg-white"
+            <Input
+             type="text"
               value={form.text}
-              placeholder="Text"
+              label="Text"
+              size="lg"
               onChange={(e) => {
                 setForm({
                   ...form,
                   text: e.target.value,
                 })
-              }} />
-            <button
-              className={`btn btn-active ${isLoading ? "loading" : ""}`}
-              onClick={onSubmit}
-            >
-              Add
-            </button>
+              }}
+            />
+            <Button
+              onClick={onSubmit}>
+              ADD
+            </Button>
           </div>
         </div>
       </div>
-      
+
     </div>
   );
 }

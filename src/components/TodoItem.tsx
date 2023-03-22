@@ -1,61 +1,41 @@
-import { api } from "@/utils/api";
-import { type Todo } from "@prisma/client";
+import { type RouterOutputs } from "@/utils/api";
+import { Button, Checkbox } from "@material-tailwind/react";
 import { formatDistance } from "date-fns";
-import { useSession } from "next-auth/react";
-import { useCallback, useState, type FC } from "react";
+import { type FC } from "react";
+import useTodoItem from "./useTodoItem";
 
-const TodoItem: FC<{ todo: Todo}> = ({ todo }) => {
-  const { data: sessionData } = useSession();
+type Todo = RouterOutputs['todo']['getAllTodos'][0]
 
-  const { refetch } = api.todo.getAllTodos.useQuery(undefined, {
-    enabled: !!sessionData?.user
-  })
+const TodoItem: FC<{ todo: Todo }> = ({ todo }) => {
 
-  const { mutate: deleteTodo } = api.todo.deleteTodo.useMutation({
-    onSuccess: async () => {
-      await refetch();
-    }
-  });
+	const { markTodoComplete, deleteTodo } = useTodoItem(todo);
 
-  const { mutate: updateTodo } = api.todo.updateTodo.useMutation({
-    onSuccess: async () => {
-      await refetch();
-    }
-  });
-
-  const [checked, setChecked] = useState(todo.completed ?? false)
-
-  const markTodoComplete = useCallback(() => {
-    setChecked(!checked);
-    updateTodo({
-      completed: !checked,
-      id: todo.id
-    })
-  }, [checked, todo.id, updateTodo])
-  
-  return (
-    <tr>
-      <th>
-        <label>
-          <input checked={checked} onClick={markTodoComplete} type="checkbox" className="checkbox" />
-        </label>
-      </th>
-      <td>
-        {todo.text}
-      </td>
-      <td>
-        {formatDistance(todo.createdAt, new Date())}
-      </td>
-      <th>
-        <button
-          className="btn btn-xs btn-error"
-          onClick={() => deleteTodo({
-            id: todo.id
-          })}
-        >Delete</button>
-      </th>
-    </tr>
-  );
+	return (
+		<tr>
+			<th>
+				<label>
+					<Checkbox
+						defaultChecked={todo.completed}
+						onClick={markTodoComplete} />
+				</label>
+			</th>
+			<td>
+				{todo.text}
+			</td>
+			<td>
+				{formatDistance(todo.createdAt, new Date())}
+			</td>
+			<th>
+				<Button
+					size="sm"
+					color="red"
+					onClick={() => deleteTodo({
+						id: todo.id
+					})}
+				>Delete</Button>
+			</th>
+		</tr>
+	);
 }
 
 export default TodoItem;

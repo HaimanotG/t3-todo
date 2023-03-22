@@ -1,4 +1,3 @@
-
 import { api } from "@/utils/api";
 import { useSession } from "next-auth/react";
 import TodoItem from "./TodoItem";
@@ -25,7 +24,9 @@ const TodosList = () => {
         </thead>
         <tbody>
           {todos?.map(((todo) => (
-            <TodoItem key={todo.id} todo={todo} />
+            <TodoItem
+              key={todo.id}
+              todo={todo} />
           )))}
         </tbody>
       </table>

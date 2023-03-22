@@ -23,6 +23,9 @@ export const todoRouter = createTRPCRouter({
     }),
   getAllTodos: protectedProcedure.query(({ ctx }) => {
     return ctx.prisma.todo.findMany({
+      where: {
+        userId: ctx.session.user.id,
+      },
       orderBy: {
         createdAt: "asc"
       }
@@ -34,14 +37,14 @@ export const todoRouter = createTRPCRouter({
       text: z.string().optional(),
       completed: z.boolean().optional(),
     }))
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ input: { id, text, completed }, ctx }) => {
       return ctx.prisma.todo.update({
         data: {
-          text: input.text,
-          completed: input.completed,
+          text,
+          completed,
         },
         where: {
-          id: input.id
+          id,
         }
       })
     }),
